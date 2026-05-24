@@ -1,6 +1,6 @@
 // ── Change this URL every time tunnel restarts ──────────────
 // Isko update karo apni current lhr.life URL se
-const BASE = import.meta.env.VITE_API_URL || 'https://4d10497f2e80ef.lhr.life';
+const BASE = import.meta.env.VITE_API_URL || 'https://b23c5d36fa325d.lhr.life';
 
 function getToken() {
   return localStorage.getItem('admin_token');
