@@ -51,7 +51,6 @@ function Badge({ type, children }) {
     </span>
   )
 }
-
 function Btn({ children, variant='primary', size='md', onClick, disabled, style={} }) {
   const variants = {
     primary: { background:'var(--cyan)', color:'var(--bg)' },
@@ -73,7 +72,6 @@ function Btn({ children, variant='primary', size='md', onClick, disabled, style=
     }}>{children}</button>
   )
 }
-
 function Card({ children, style={} }) {
   return (
     <div style={{ background:'var(--s1)', border:'1px solid var(--b1)',
@@ -82,7 +80,6 @@ function Card({ children, style={} }) {
     </div>
   )
 }
-
 function CardHeader({ title, action }) {
   return (
     <div style={{ padding:'16px 20px', borderBottom:'1px solid var(--b1)',
@@ -92,7 +89,6 @@ function CardHeader({ title, action }) {
     </div>
   )
 }
-
 function StatCard({ label, value, color, meta, top }) {
   return (
     <div style={{ background:'var(--s1)', border:'1px solid var(--b1)', borderRadius:14,
@@ -106,7 +102,6 @@ function StatCard({ label, value, color, meta, top }) {
     </div>
   )
 }
-
 function Modal({ title, children, onClose, footer }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)',
@@ -129,7 +124,6 @@ function Modal({ title, children, onClose, footer }) {
     </div>
   )
 }
-
 function Input({ label, ...props }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -138,7 +132,6 @@ function Input({ label, ...props }) {
     </div>
   )
 }
-
 function EmiBar({ paid, total }) {
   const pct = Math.round((paid/total)*100)
   return (
@@ -156,6 +149,13 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
+  const [showUrl, setShowUrl]   = useState(false)
+  const [apiUrl, setApiUrl]     = useState(localStorage.getItem('api_url_override')||'')
+
+  function saveUrl() {
+    localStorage.setItem('api_url_override', apiUrl)
+    setShowUrl(false)
+  }
 
   async function handleLogin() {
     if (!username || !password) return setError('Sab fields bharein')
@@ -202,6 +202,19 @@ function Login({ onLogin }) {
                 style={{ width:'100%', justifyContent:'center', marginTop:8 }}>
                 {loading ? 'Logging in...' : '→ Login'}
               </Btn>
+            </div>
+            <div style={{ marginTop:20, paddingTop:16, borderTop:'1px solid var(--b1)' }}>
+              <button onClick={()=>setShowUrl(!showUrl)} style={{
+                background:'none', border:'none', color:'var(--t3)',
+                fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6
+              }}>⚙ Server URL Change Karo</button>
+              {showUrl && (
+                <div style={{ marginTop:12, display:'flex', flexDirection:'column', gap:8 }}>
+                  <Input placeholder="https://xxxx.lhr.life" value={apiUrl}
+                    onChange={e=>setApiUrl(e.target.value)} />
+                  <Btn variant='ghost' size='sm' onClick={saveUrl}>Save URL</Btn>
+                </div>
+              )}
             </div>
           </div>
         </Card>
@@ -251,7 +264,6 @@ function Dashboard() {
     </div>
   )
 }
-
 function Retailers() {
   const [retailers, setRetailers] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -444,15 +456,11 @@ function Devices() {
     </div>
   )
 }
-
 function Logs() {
   const [logs, setLogs]       = useState([])
   const [loading, setLoading] = useState(true)
-
   useEffect(() => { api.getLogs().then(setLogs).finally(()=>setLoading(false)) }, [])
-
   if (loading) return <Loader />
-
   return (
     <div>
       <PageHeader title="Action Logs" subtitle="Lock/unlock history" />
@@ -478,18 +486,15 @@ function Logs() {
     </div>
   )
 }
-
 function Settings({ user, onLogout }) {
   const [apiUrl, setApiUrl] = useState(localStorage.getItem('api_url_override')||'')
   const [saved, setSaved]   = useState(false)
-
   function saveUrl() {
     localStorage.setItem('api_url_override', apiUrl)
     setSaved(true)
     setTimeout(()=>setSaved(false), 2000)
     window.location.reload()
   }
-
   return (
     <div>
       <PageHeader title="Settings" subtitle="Configuration" />
@@ -539,7 +544,6 @@ function PageHeader({ title, subtitle, action }) {
     </div>
   )
 }
-
 function Loader() {
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center',
@@ -548,7 +552,6 @@ function Loader() {
     </div>
   )
 }
-
 const NAV = [
   { id:'dashboard', icon:'◈', label:'Dashboard' },
   { id:'retailers', icon:'🏪', label:'Retailers' },
@@ -556,10 +559,8 @@ const NAV = [
   { id:'logs',      icon:'📋', label:'Logs' },
   { id:'settings',  icon:'⚙️', label:'Settings' },
 ]
-
 function Layout({ user, onLogout }) {
   const [page, setPage] = useState('dashboard')
-
   const pages = {
     dashboard: <Dashboard />,
     retailers: <Retailers />,
@@ -567,7 +568,6 @@ function Layout({ user, onLogout }) {
     logs:      <Logs />,
     settings:  <Settings user={user} onLogout={onLogout} />,
   }
-
   return (
     <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
       <div style={{ width:210, background:'var(--s1)', borderRight:'1px solid var(--b1)',
@@ -605,18 +605,15 @@ function Layout({ user, onLogout }) {
     </div>
   )
 }
-
 export default function App() {
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('admin_user')) } catch { return null }
   })
-
   function handleLogout() {
     localStorage.removeItem('admin_token')
     localStorage.removeItem('admin_user')
     setUser(null)
   }
-
   return (
     <>
       <style>{G}</style>
@@ -627,3 +624,4 @@ export default function App() {
     </>
   )
 }
+
