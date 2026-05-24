@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from './api/client'
 
-// ─── GLOBAL STYLES ────────────────────────────────────────
 const G = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -35,8 +34,6 @@ const G = `
   tr:last-child td{border-bottom:none}
   tr:hover td{background:rgba(255,255,255,.015)}
 `
-
-// ─── HELPERS ──────────────────────────────────────────────
 function Badge({ type, children }) {
   const styles = {
     active:    { bg: 'rgba(0,224,150,.12)',  color: '#00e096', border: 'rgba(0,224,150,.25)' },
@@ -154,8 +151,6 @@ function EmiBar({ paid, total }) {
     </div>
   )
 }
-
-// ─── LOGIN PAGE ───────────────────────────────────────────
 function Login({ onLogin }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -191,7 +186,6 @@ function Login({ onLogin }) {
             letterSpacing:-1 }}>PhoneLock <span style={{ color:'var(--cyan)' }}>Admin</span></div>
           <div style={{ fontSize:13, color:'var(--t2)', marginTop:6 }}>Super Admin Portal</div>
         </div>
-
         <Card>
           <div style={{ padding:28 }}>
             {error && <div style={{ background:'rgba(255,59,92,.1)', border:'1px solid rgba(255,59,92,.25)',
@@ -215,8 +209,6 @@ function Login({ onLogin }) {
     </div>
   )
 }
-
-// ─── DASHBOARD ────────────────────────────────────────────
 function Dashboard() {
   const [stats, setStats] = useState(null)
   const [retailers, setRetailers] = useState([])
@@ -239,7 +231,6 @@ function Dashboard() {
         <StatCard label="Locked Devices" value={stats?.lockedDevices||0} color="var(--red)" top="var(--red)" />
         <StatCard label="Total Revenue" value={`₨${((stats?.totalRevenue||0)/1000).toFixed(0)}K`} color="var(--green)" top="var(--green)" />
       </div>
-
       <Card>
         <CardHeader title="Top Retailers" />
         <table>
@@ -261,7 +252,6 @@ function Dashboard() {
   )
 }
 
-// ─── RETAILERS PAGE ───────────────────────────────────────
 function Retailers() {
   const [retailers, setRetailers] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -308,13 +298,10 @@ function Retailers() {
     <div>
       <PageHeader title="Retailers" subtitle={`${retailers.length} registered`}
         action={<Btn onClick={()=>setShowAdd(true)}>+ Add Retailer</Btn>} />
-
       <div style={{ marginBottom:20 }}>
         <input placeholder="🔍  Search retailers..." value={search}
-          onChange={e=>setSearch(e.target.value)}
-          style={{ maxWidth:300 }} />
+          onChange={e=>setSearch(e.target.value)} style={{ maxWidth:300 }} />
       </div>
-
       <Card>
         <div style={{ overflowX:'auto' }}>
           <table>
@@ -354,7 +341,6 @@ function Retailers() {
           </table>
         </div>
       </Card>
-
       {showAdd && (
         <Modal title="➕ New Retailer" onClose={()=>setShowAdd(false)}
           footer={<>
@@ -384,8 +370,6 @@ function Retailers() {
     </div>
   )
 }
-
-// ─── DEVICES PAGE ─────────────────────────────────────────
 function Devices() {
   const [devices, setDevices] = useState([])
   const [loading, setLoading] = useState(true)
@@ -419,7 +403,6 @@ function Devices() {
   return (
     <div>
       <PageHeader title="All Devices" subtitle={`${devices.length} total`} />
-
       <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap'}}>
         <input placeholder="🔍  Search..." value={search}
           onChange={e=>setSearch(e.target.value)} style={{maxWidth:260}} />
@@ -433,8 +416,214 @@ function Devices() {
           ))}
         </div>
       </div>
-
       <Card>
         <div style={{overflowX:'auto'}}>
           <table>
-            <thead><tr><th>IMEI</th><th>DEVICE</th><th>CUSTOMER</th><th>RETAILE
+            <thead><tr><th>IMEI</th><th>DEVICE</th><th>CUSTOMER</th><th>RETAILER</th><th>EMI</th><th>STATUS</th><th>ACTION</th></tr></thead>
+            <tbody>
+              {filtered.map(d=>(
+                <tr key={d.id}>
+                  <td><span style={{fontFamily:'var(--fm)',fontSize:11,color:'var(--t2)'}}>{d.imei}</span></td>
+                  <td><div style={{fontWeight:600}}>{d.brand}</div><div style={{fontSize:11,color:'var(--t2)'}}>{d.model}</div></td>
+                  <td><div>{d.customer_name}</div><div style={{fontSize:11,color:'var(--t2)'}}>{d.customer_phone}</div></td>
+                  <td><div style={{fontSize:12}}>{d.retailer_name}</div><div style={{fontSize:11,color:'var(--t2)'}}>{d.retailer_city}</div></td>
+                  <td><EmiBar paid={d.emi_paid||0} total={d.emi_total||1} /></td>
+                  <td><Badge type={d.status}>{d.status}</Badge></td>
+                  <td>
+                    <Btn variant={d.status==='locked'?'success':'danger'} size='sm'
+                      onClick={()=>doLock(d)} disabled={acting===d.id}>
+                      {acting===d.id?'...' : d.status==='locked'?'🔓 Unlock':'🔒 Lock'}
+                    </Btn>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+function Logs() {
+  const [logs, setLogs]       = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => { api.getLogs().then(setLogs).finally(()=>setLoading(false)) }, [])
+
+  if (loading) return <Loader />
+
+  return (
+    <div>
+      <PageHeader title="Action Logs" subtitle="Lock/unlock history" />
+      <Card>
+        <div style={{overflowX:'auto'}}>
+          <table>
+            <thead><tr><th>TIME</th><th>ACTION</th><th>DEVICE</th><th>CUSTOMER</th><th>RETAILER</th><th>REASON</th></tr></thead>
+            <tbody>
+              {logs.map(l=>(
+                <tr key={l.id}>
+                  <td><span style={{fontFamily:'var(--fm)',fontSize:11,color:'var(--t2)'}}>{new Date(l.performed_at).toLocaleString('en-PK')}</span></td>
+                  <td><Badge type={l.action==='lock'?'locked':'active'}>{l.action==='lock'?'🔒 Lock':'🔓 Unlock'}</Badge></td>
+                  <td><div style={{fontSize:12}}>{l.brand} {l.model}</div><div style={{fontFamily:'var(--fm)',fontSize:10,color:'var(--t3)'}}>{l.imei}</div></td>
+                  <td>{l.customer_name}</td>
+                  <td>{l.retailer_name}</td>
+                  <td style={{color:'var(--t2)',fontSize:12}}>{l.reason}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+function Settings({ user, onLogout }) {
+  const [apiUrl, setApiUrl] = useState(localStorage.getItem('api_url_override')||'')
+  const [saved, setSaved]   = useState(false)
+
+  function saveUrl() {
+    localStorage.setItem('api_url_override', apiUrl)
+    setSaved(true)
+    setTimeout(()=>setSaved(false), 2000)
+    window.location.reload()
+  }
+
+  return (
+    <div>
+      <PageHeader title="Settings" subtitle="Configuration" />
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+        <Card>
+          <CardHeader title="Backend URL" />
+          <div style={{padding:20}}>
+            <div style={{fontSize:13,color:'var(--t2)',marginBottom:12,lineHeight:1.6}}>
+              Jab bhi tunnel restart ho aur nayi URL mile — yahan update karo.
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <Input label="Current API URL" placeholder="https://xxxx.lhr.life"
+                value={apiUrl} onChange={e=>setApiUrl(e.target.value)} />
+              <Btn onClick={saveUrl} style={{width:'fit-content'}}>
+                {saved?'✅ Saved!':'Save & Reload'}
+              </Btn>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Admin Info" />
+          <div style={{padding:20}}>
+            {[['Username',user?.username],['Role','Super Admin'],['Version','v1.0.0']].map(([k,v])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',
+                padding:'10px 0',borderBottom:'1px solid var(--b1)',fontSize:13}}>
+                <span style={{color:'var(--t2)'}}>{k}</span>
+                <span style={{fontFamily:'var(--fm)',color:'var(--cyan)'}}>{v}</span>
+              </div>
+            ))}
+            <div style={{marginTop:20}}>
+              <Btn variant='danger' onClick={onLogout}>Logout</Btn>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}
+function PageHeader({ title, subtitle, action }) {
+  return (
+    <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:28 }}>
+      <div>
+        <div style={{ fontFamily:'var(--fd)', fontSize:26, fontWeight:800, letterSpacing:-.5 }}>{title}</div>
+        {subtitle && <div style={{ fontSize:13, color:'var(--t2)', marginTop:4 }}>{subtitle}</div>}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+function Loader() {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center',
+      height:300, color:'var(--t3)', fontSize:14 }}>
+      Loading...
+    </div>
+  )
+}
+
+const NAV = [
+  { id:'dashboard', icon:'◈', label:'Dashboard' },
+  { id:'retailers', icon:'🏪', label:'Retailers' },
+  { id:'devices',   icon:'📱', label:'Devices' },
+  { id:'logs',      icon:'📋', label:'Logs' },
+  { id:'settings',  icon:'⚙️', label:'Settings' },
+]
+
+function Layout({ user, onLogout }) {
+  const [page, setPage] = useState('dashboard')
+
+  const pages = {
+    dashboard: <Dashboard />,
+    retailers: <Retailers />,
+    devices:   <Devices />,
+    logs:      <Logs />,
+    settings:  <Settings user={user} onLogout={onLogout} />,
+  }
+
+  return (
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+      <div style={{ width:210, background:'var(--s1)', borderRight:'1px solid var(--b1)',
+        display:'flex', flexDirection:'column', padding:'16px 10px', flexShrink:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', marginBottom:20 }}>
+          <div style={{ width:32, height:32, borderRadius:8,
+            background:'linear-gradient(135deg,var(--cyan),var(--purple))',
+            display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>🔒</div>
+          <div style={{ fontFamily:'var(--fd)', fontWeight:800, fontSize:16 }}>
+            Phone<span style={{color:'var(--cyan)'}}>Lock</span>
+          </div>
+        </div>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:'uppercase',
+          color:'var(--t3)',padding:'6px 10px',marginBottom:4}}>MENU</div>
+        {NAV.map(item=>(
+          <button key={item.id} onClick={()=>setPage(item.id)} style={{
+            display:'flex', alignItems:'center', gap:10, padding:'9px 10px',
+            borderRadius:8, fontSize:13, fontWeight:500,
+            color: page===item.id?'var(--cyan)':'var(--t2)',
+            background: page===item.id?'rgba(0,229,255,.08)':'transparent',
+            border: page===item.id?'1px solid rgba(0,229,255,.15)':'1px solid transparent',
+            cursor:'pointer', width:'100%', textAlign:'left', marginBottom:2,
+            transition:'all .15s'
+          }}><span>{item.icon}</span><span>{item.label}</span>
+          </button>
+        ))}
+        <div style={{marginTop:'auto',padding:'12px 10px',borderTop:'1px solid var(--b1)'}}>
+          <div style={{fontSize:11,color:'var(--t3)',fontFamily:'var(--fm)'}}>{user?.username}</div>
+          <div style={{fontSize:10,color:'var(--t3)',marginTop:2}}>Super Admin</div>
+        </div>
+      </div>
+      <div style={{ flex:1, overflowY:'auto', padding:28, background:'var(--bg)' }}>
+        {pages[page]}
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('admin_user')) } catch { return null }
+  })
+
+  function handleLogout() {
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
+    setUser(null)
+  }
+
+  return (
+    <>
+      <style>{G}</style>
+      {user
+        ? <Layout user={user} onLogout={handleLogout} />
+        : <Login onLogin={setUser} />
+      }
+    </>
+  )
+}
